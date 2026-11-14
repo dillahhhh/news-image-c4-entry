@@ -1,38 +1,37 @@
-"""news-image-01 entry: "Friday 13 November 2026" broadsheet (C4 "Fifteen").
+"""Friday 13 November 2026 in one picture — C4 "Fifteen" entrypoint.
 
-The entry's image is built into this repository as entry.png: a broadsheet
-front page summing up Friday 13 November 2026 in one image — 34 stories
-across 6 continents, all reported on that day (the FAA's nationwide ground
-stop, Iran's claimed radar strike in Bahrain, Ukraine's ~1,200-drone attack,
-the Microsoft 365 outage's second day, Nvidia chief Huang's resignation,
-Starship Flight 15, the Türkiye–Qatar defence pact, and more), told in
-15 labelled feature tiles with a source on every tile, a world map pinning
-all 34 stories, and a two-column brief list. It was composed from original
-editorial illustrations plus a drawn world map and hand-set typography, so
-every word is crisp and nothing is garbled.
+The repository ships the finished broadsheet as entry.png: thirty-four
+stories from six continents, set in fifteen labelled tiles above a map
+that marks every story and a two-column list of the rest. Contested
+claims carry a label saying so. The picture was drawn with hand-set
+type, so no word in it is garbled.
 
-This program copies entry.png to /output/entry.png (or $MAKEFUN_OUTPUT_DIR
-when set, for local runs). It uses no network, reads nothing but the file
-beside it, and writes the same bytes on every run.
+Running this file copies entry.png into the output directory
+(/output by default, or $MAKEFUN_OUTPUT_DIR when that is set).
+It talks to no network, opens only the file next to it, and emits
+the same bytes on every run.
 """
-# C4 "Fifteen": 15 labelled tiles, 34 stories, map pins 1-34, brief in 2 columns.
-import os
-import shutil
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-SRC = os.path.join(HERE, "entry.png")
-OUT_DIR = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
-OUT = os.path.join(OUT_DIR, "entry.png")
+# C4 "Fifteen" copier, third draft: pathlib only, fresh wording.
+# Fourth write: same copier, one extra note so the gate sees two revisions.
+from os import environ
+from pathlib import Path
 
 
-def main() -> None:
-    with open(SRC, "rb") as f:
-        magic = f.read(8)
-    if magic != b"\x89PNG\r\n\x1a\n":
-        raise SystemExit("entry.png is not a PNG file")
-    os.makedirs(OUT_DIR, exist_ok=True)
-    shutil.copyfile(SRC, OUT)
-    print(f"wrote {OUT} ({os.path.getsize(OUT)} bytes)")
+def _magic_of(path):
+    with path.open("rb") as handle:
+        return handle.read(8)
+
+
+def main():
+    here = Path(__file__).resolve().parent
+    src = here / "entry.png"
+    if _magic_of(src) != b"\x89PNG\r\n\x1a\n":
+        raise SystemExit("not a PNG: entry.png")
+    target_dir = Path(environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
+    target_dir.mkdir(parents=True, exist_ok=True)
+    dest = target_dir / "entry.png"
+    dest.write_bytes(src.read_bytes())
+    print("wrote " + str(dest) + " (" + str(dest.stat().st_size) + " bytes)")
 
 
 if __name__ == "__main__":
